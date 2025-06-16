@@ -40,10 +40,7 @@ namespace Myna.Assets
             AssetDatabase.SaveAssetIfDirty(this);
             AssetDatabase.Refresh();
 
-            data.MapSourceToTargetObjects(this);
-            data.RemoveInvalidTargetObjects(this);
-            data.CopySourcePropertiesToTarget();
-            data.ApplyPropertyOverrides();
+            data.ApplyOverrides(this);
 
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
@@ -74,9 +71,7 @@ namespace Myna.Assets
             AssetDatabase.SaveAssetIfDirty(this);
             AssetDatabase.Refresh();
 
-            data.FindAddedObjects(this);
-            data.FindRemovedObjects();
-            data.FindPropertyOverrides();
+            data.RecordOverrides(this);
 
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
@@ -168,16 +163,21 @@ namespace Myna.Assets
             AllowEdits = EditorGUILayout.ToggleLeft("Allow Manual Edits to Overrides", AllowEdits);
             GUI.color = Color.white;
 
-            string text = ObjectNames.NicifyVariableName(nameof(TimelineAssetVariant.ApplyOverrides));
-            if (GUILayout.Button(text))
+            if (FriendlyButton(nameof(TimelineAssetVariant.ApplyOverrides)))
             {
                 target.ApplyOverrides();
             }
 
-            text = ObjectNames.NicifyVariableName(nameof(TimelineAssetVariant.RecordOverrides));
-            if (GUILayout.Button(text))
+            if (FriendlyButton(nameof(TimelineAssetVariant.RecordOverrides)))
             {
                 target.RecordOverrides();
+            }
+
+            
+            if (FriendlyButton(nameof(TimelineAssetVariantData.ResetOverrides)))
+            {
+                var data = target.GetData();
+                data.ResetOverrides();
             }
         }
 
@@ -197,6 +197,12 @@ namespace Myna.Assets
 
                 serializedObject.ApplyModifiedProperties();
             }
+        }
+
+        private static bool FriendlyButton(string methodName, params GUILayoutOption[] options)
+        {
+            string text = ObjectNames.NicifyVariableName(methodName);
+            return GUILayout.Button(text, options);
         }
     }
 #endif

@@ -81,7 +81,29 @@ namespace Myna.Assets
 
         private static ILogger Logger => TimelineAssetVariant.Logger;
 
-        internal void MapSourceToTargetObjects(Object target)
+        public void ApplyOverrides(Object target)
+        {
+            MapSourceToTargetObjects(target);
+            RemoveInvalidTargetObjects(target);
+            CopySourcePropertiesToTarget();
+            ApplyPropertyOverrides();
+        }
+
+        public void RecordOverrides(Object target)
+        {
+            FindAddedObjects(target);
+            FindRemovedObjects();
+            FindPropertyOverrides();
+        }
+
+        public void ResetOverrides()
+        {
+            _addedObjects.Clear();
+            _removedObjects.Clear();
+            _propertyOverrides.Clear();
+        }
+
+        private void MapSourceToTargetObjects(Object target)
         {
             Assert.IsNotNull(Source, "'Source' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(Source), "'Source' is not a project asset");
@@ -136,7 +158,7 @@ namespace Myna.Assets
             }
         }
 
-        internal void RemoveInvalidTargetObjects(Object target)
+        private void RemoveInvalidTargetObjects(Object target)
         {
             Assert.IsNotNull(target, "'target' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(target), "'target' is not a project asset");
@@ -157,7 +179,7 @@ namespace Myna.Assets
             }
         }
 
-        internal void CopySourcePropertiesToTarget()
+        private void CopySourcePropertiesToTarget()
         {
             foreach (var mapping in ObjectMappings)
             {
@@ -233,7 +255,7 @@ namespace Myna.Assets
             }
         }
 
-        internal void ApplyPropertyOverrides()
+        private void ApplyPropertyOverrides()
         {
             foreach (var propertyOverride in PropertyOverrides)
             {
@@ -282,7 +304,7 @@ namespace Myna.Assets
             }
         }
 
-        internal void FindAddedObjects(Object target)
+        private void FindAddedObjects(Object target)
         {
             Assert.IsNotNull(target, "'target' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(target), "'target' is not a project asset");
@@ -304,7 +326,7 @@ namespace Myna.Assets
             AddedObjects = keys;
         }
 
-        internal void FindRemovedObjects()
+        private void FindRemovedObjects()
         {
             Assert.IsNotNull(Source, "'Source' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(Source), "'Source' is not a project asset");
@@ -326,7 +348,7 @@ namespace Myna.Assets
             RemovedObjects = keys;
         }
 
-        internal void FindPropertyOverrides()
+        private void FindPropertyOverrides()
         {
             int count = 0;
             PropertyOverrides.Clear();
