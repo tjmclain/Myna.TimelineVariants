@@ -1,0 +1,11 @@
+{
+	"name": "com.myna.timeline-variants",
+	"version": "1.0.0",
+	"displayName": "Timeline Variants",
+	"description": "A solution for creating variants of timeline assets based on Unity's prefab variants system",
+	"unity": "6.0",
+	"dependencies": {
+		"com.unity.timeline": "1.8.7",
+		"com.unity.nuget.newtonsoft-json": "3.2.1"
+	}
+}
