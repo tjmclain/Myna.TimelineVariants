@@ -211,11 +211,6 @@ namespace Myna.Assets
                             // Skip Generic properties...
                             break;
 
-                        case SerializedPropertyType.ManagedReference:
-                        case SerializedPropertyType.ExposedReference:
-                            Logger.LogWarning(nameof(CopySourcePropertiesToTarget), $"-- Skipping {sourceProp.propertyType} at path {sourceProp.propertyPath}");
-                            break;
-
                         case SerializedPropertyType.String:
                             targetProp.stringValue = sourceProp.stringValue;
                             Logger.Log(
@@ -399,7 +394,6 @@ namespace Myna.Assets
                             break;
 
                         case SerializedPropertyType.ManagedReference:
-                        case SerializedPropertyType.ExposedReference:
                             Logger.LogWarning(nameof(FindPropertyOverrides), $"-- Skipping {targetProp.propertyType} at path {targetProp.propertyPath}");
                             break;
 

@@ -28,6 +28,98 @@ MonoBehaviour:
   m_Retroactive: 0
   m_EmitOnce: 0
   m_Asset: {fileID: 11400000, guid: 244779e35c156ca43afeb895c22ed393, type: 2}
+--- !u!114 &-5500894425529560187
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15e0374501f39d54eb30235764636e0e, type: 3}
+  m_Name: Control Track(Clone)
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips:
+  - m_Version: 1
+    m_Start: 0.4666666666666667
+    m_ClipIn: 0
+    m_Asset: {fileID: 9058839979182117091}
+    m_Duration: 5
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: -5500894425529560187}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 0
+    m_BlendOutDuration: 0
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: Sphere
+  m_Markers:
+    m_Objects: []
 --- !u!114 &-5431069616463109647
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -627,6 +719,7 @@ MonoBehaviour:
   - {fileID: 6011806720902090993}
   - {fileID: -5431069616463109647}
   - {fileID: -2119713551988523137}
+  - {fileID: -5500894425529560187}
   m_FixedDuration: 0
   m_EditorSettings:
     m_Framerate: 60
@@ -743,6 +836,22 @@ MonoBehaviour:
   m_OpenClipOffsetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_Rotation: {x: 0, y: 0, z: 0, w: 1}
   m_ApplyOffsets: 0
+--- !u!114 &1583389175085292686
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
+  m_Name: Signal Emitter(Clone)
+  m_EditorClassIdentifier: 
+  m_Time: 0.55
+  m_Retroactive: 0
+  m_EmitOnce: 0
+  m_Asset: {fileID: 0}
 --- !u!114 &2658721381063373415
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -783,6 +892,12 @@ MonoBehaviour:
     Target: {fileID: 8825586237960370163}
   - Source: {fileID: 4113737943378384697, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
     Target: {fileID: 7591641718822853482}
+  - Source: {fileID: 7344392308906722390, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
+    Target: {fileID: 9058839979182117091}
+  - Source: {fileID: -1202812837275794268, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
+    Target: {fileID: -5500894425529560187}
+  - Source: {fileID: 5394837980788921881, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
+    Target: {fileID: 1583389175085292686}
   _addedObjects: []
   _removedObjects: []
   _propertyOverrides:
@@ -794,6 +909,10 @@ MonoBehaviour:
     Source: {fileID: 5609528441325479625, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
     Value: 
     ObjectReference: {fileID: 7400000, guid: feeff66aa5d050340924fd4942a139d6, type: 2}
+  - PropertyPath: m_Clips.Array.data[0].m_DisplayName
+    Source: {fileID: -1202812837275794268, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
+    Value: '"Sphere"'
+    ObjectReference: {fileID: 0}
 --- !u!114 &6011806720902090993
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -971,3 +1090,27 @@ MonoBehaviour:
   m_OpenClipOffsetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_Rotation: {x: 0, y: 0, z: 0, w: 1}
   m_ApplyOffsets: 0
+--- !u!114 &9058839979182117091
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48853ae485fa386428341ac1ea122570, type: 3}
+  m_Name: ControlPlayableAsset(Clone)
+  m_EditorClassIdentifier: 
+  sourceGameObject:
+    exposedName: ac276217039e17f42b773d60fac4c3c2
+    defaultValue: {fileID: 0}
+  prefabGameObject: {fileID: 0}
+  updateParticle: 1
+  particleRandomSeed: 7668
+  updateDirector: 1
+  updateITimeControl: 1
+  searchHierarchy: 0
+  active: 1
+  postPlayback: 2
+  directorOnClipEnd: 0
