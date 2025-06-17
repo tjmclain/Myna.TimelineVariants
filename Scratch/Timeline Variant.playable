@@ -786,10 +786,6 @@ MonoBehaviour:
   _addedObjects: []
   _removedObjects: []
   _propertyOverrides:
-  - PropertyPath: m_Clips.Array.data[0].m_Duration
-    Source: {fileID: -4151104816974158990, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
-    Value: 1.0
-    ObjectReference: {fileID: 0}
   - PropertyPath: m_Clips.Array.data[0].m_DisplayName
     Source: {fileID: -4151104816974158990, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
     Value: '"New Animation 1"'
