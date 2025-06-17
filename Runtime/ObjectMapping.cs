@@ -42,7 +42,6 @@ namespace Myna.Assets
             }
 
             return obj;
-
         }
     }
 

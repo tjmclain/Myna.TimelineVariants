@@ -73,6 +73,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8615059548216207591}
     - target: {fileID: -581958626982194962, guid: e632c29cc8b40154ba1a1b771a568324, type: 3}
+      propertyPath: m_ExposedReferences.m_References.Array.data[0].first
+      value: helloWorld
+      objectReference: {fileID: 0}
+    - target: {fileID: -581958626982194962, guid: e632c29cc8b40154ba1a1b771a568324, type: 3}
       propertyPath: m_ExposedReferences.m_References.Array.data[0].second
       value: 
       objectReference: {fileID: 2829625495075575905}

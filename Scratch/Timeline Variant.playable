@@ -909,6 +909,10 @@ MonoBehaviour:
     Source: {fileID: 5609528441325479625, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
     Value: 
     ObjectReference: {fileID: 7400000, guid: feeff66aa5d050340924fd4942a139d6, type: 2}
+  - PropertyPath: sourceGameObject.exposedName
+    Source: {fileID: 7344392308906722390, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
+    Value: '"helloWorld"'
+    ObjectReference: {fileID: 0}
   - PropertyPath: m_Clips.Array.data[0].m_DisplayName
     Source: {fileID: -1202812837275794268, guid: 5126505583488b44aa0d885bfcbc9933, type: 2}
     Value: '"Sphere"'
@@ -1103,7 +1107,7 @@ MonoBehaviour:
   m_Name: ControlPlayableAsset(Clone)
   m_EditorClassIdentifier: 
   sourceGameObject:
-    exposedName: ac276217039e17f42b773d60fac4c3c2
+    exposedName: helloWorld
     defaultValue: {fileID: 0}
   prefabGameObject: {fileID: 0}
   updateParticle: 1
