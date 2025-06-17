@@ -173,11 +173,13 @@ namespace Myna.Assets
                 target.RecordOverrides();
             }
 
-            
-            if (FriendlyButton(nameof(TimelineAssetVariantData.ResetOverrides)))
+            using (new EditorGUI.DisabledScope(!AllowEdits))
             {
-                var data = target.GetData();
-                data.ResetOverrides();
+                if (FriendlyButton(nameof(TimelineAssetVariantData.ResetOverrides)))
+                {
+                    var data = target.GetData();
+                    data.ResetOverrides();
+                }
             }
         }
 
