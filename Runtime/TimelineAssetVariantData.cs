@@ -23,13 +23,13 @@ namespace Myna.Assets
         private TimelineAsset _source;
 
         [SerializeField, DisableInInspector, ObjectMappingListItem]
-        private List<ObjectMapping> _objectMappings = new();
+        private List<ObjectMapping> _objectMap = new();
 
         [SerializeField, DisableInInspector]
-        private List<ObjectReference> _addedObjects = new();
+        private List<Object> _addedObjects = new();
 
         [SerializeField, DisableInInspector]
-        private List<ObjectReference> _removedObjects = new();
+        private List<Object> _removedObjects = new();
 
         [SerializeField, DisableInInspector]
         private List<PropertyOverride> _propertyOverrides = new();
@@ -40,19 +40,19 @@ namespace Myna.Assets
             set => _source = value;
         }
 
-        internal List<ObjectMapping> ObjectMappings
+        internal List<ObjectMapping> ObjectMap
         {
-            get => _objectMappings;
-            set => _objectMappings = value;
+            get => _objectMap;
+            set => _objectMap = value;
         }
 
-        internal List<ObjectReference> AddedObjects
+        internal List<Object> AddedObjects
         {
             get => _addedObjects;
             set => _addedObjects = value;
         }
 
-        internal List<ObjectReference> RemovedObjects
+        internal List<Object> RemovedObjects
         {
             get => _removedObjects;
             set => _removedObjects = value;
@@ -84,9 +84,9 @@ namespace Myna.Assets
         public void ApplyOverrides(Object target)
         {
             MapSourceToTargetObjects(target);
-            RemoveInvalidTargetObjects(target);
-            CopySourcePropertiesToTarget();
-            ApplyPropertyOverrides();
+            // RemoveInvalidTargetObjects(target);
+            // CopySourcePropertiesToTarget();
+            // ApplyPropertyOverrides(target);
         }
 
         public void RecordOverrides(Object target)
@@ -111,13 +111,14 @@ namespace Myna.Assets
             Assert.IsTrue(EditorUtility.IsPersistent(target), "'target' is not a project asset");
 
             // Map source root object to target root object
-            if (!ObjectMappings.Any(x => x.Source.Object == Source))
+            if (!ObjectMap.Any(x => x.Source == Source))
             {
-                ObjectMappings.Add(new(Source, target));
+                ObjectMap.Add(new(Source, target));
             }
 
             string assetPath = AssetDatabase.GetAssetPath(Source);
-            var sourceObjects = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(x => !AssetDatabase.IsMainAsset(x));
+            var sourceObjects = AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                .Where(x => !AssetDatabase.IsMainAsset(x) && x is not TimelineAssetVariantData);
 
             Logger.Log(
                 nameof(MapSourceToTargetObjects),
@@ -126,34 +127,29 @@ namespace Myna.Assets
 
             foreach (var sourceObject in sourceObjects)
             {
-                int index = ObjectMappings.FindIndex(x => x.Source.Object == sourceObject);
-                var mapping = index >= 0 ? ObjectMappings[index] : new ObjectMapping();
-                mapping.Source = ObjectReference.Get(sourceObject);
+                int index = ObjectMap.FindIndex(x => x.Source == sourceObject);
+                var mapping = index >= 0 ? ObjectMap[index] : new ObjectMapping();
+                mapping.Source = sourceObject;
 
-                if (!RemovedObjects.Contains(mapping.Source))
+                var targetObject = mapping.Target;
+                if (!RemovedObjects.Contains(sourceObject))
                 {
-                    var targetObject = mapping.Target.Object;
                     if (targetObject == null)
                     {
                         targetObject = Instantiate(sourceObject);
-                        targetObject.name = sourceObject.name;
                         targetObject.hideFlags = sourceObject.hideFlags;
                         AssetDatabase.AddObjectToAsset(targetObject, target);
                     }
-                    mapping.Target = ObjectReference.Get(targetObject);
                 }
-                else
-                {
-                    mapping.Target = ObjectReference.Null;
-                }
+                mapping.Target = targetObject;
 
                 if (index >= 0)
                 {
-                    ObjectMappings[index] = mapping;
+                    ObjectMap[index] = mapping;
                 }
                 else
                 {
-                    ObjectMappings.Add(mapping);
+                    ObjectMap.Add(mapping);
                 }
             }
         }
@@ -165,13 +161,11 @@ namespace Myna.Assets
 
             string assetPath = AssetDatabase.GetAssetPath(target);
             var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath)
-                .Where(x => !AssetDatabase.IsMainAsset(x))
-                .Where(x => x is not TimelineAssetVariantData);
+                .Where(x => !AssetDatabase.IsMainAsset(x) && x is not TimelineAssetVariantData);
 
             foreach (var obj in objects)
             {
-                var key = ObjectReference.Get(obj);
-                if (!AddedObjects.Contains(key) && !ObjectMappings.Any(x => x.Target == key))
+                if (!AddedObjects.Contains(obj) && !ObjectMap.Any(x => x.Target == obj))
                 {
                     AssetDatabase.RemoveObjectFromAsset(obj);
                     DestroyImmediate(obj);
@@ -181,22 +175,15 @@ namespace Myna.Assets
 
         private void CopySourcePropertiesToTarget()
         {
-            foreach (var mapping in ObjectMappings)
+            foreach (var mapping in ObjectMap)
             {
-                var source = mapping.Source.Object;
-                if (source == null)
+                if (mapping.Source == null || mapping.Target == null)
                 {
                     continue;
                 }
 
-                var target = mapping.Target.Object;
-                if (target == null)
-                {
-                    continue;
-                }
-
-                using var serializedSource = new SerializedObject(source);
-                using var serializedTarget = new SerializedObject(target);
+                using var serializedSource = new SerializedObject(mapping.Source);
+                using var serializedTarget = new SerializedObject(mapping.Target);
 
                 Logger.Log(nameof(CopySourcePropertiesToTarget), $"{mapping.Source} --> {mapping.Target}");
 
@@ -217,7 +204,6 @@ namespace Myna.Assets
                     var sourceProp = iterator.Copy();
                     var targetProp = serializedTarget.FindProperty(sourceProp.propertyPath);
 
-                    Logger.Log(nameof(CopySourcePropertiesToTarget), $"-- {sourceProp.propertyPath} ({sourceProp.propertyType})");
                     switch (sourceProp.propertyType)
                     {
                         case SerializedPropertyType.Generic:
@@ -226,27 +212,41 @@ namespace Myna.Assets
 
                         case SerializedPropertyType.ManagedReference:
                         case SerializedPropertyType.ExposedReference:
-                            Logger.LogWarning(nameof(CopySourcePropertiesToTarget), $"---- Skipping {sourceProp.propertyType} at path {sourceProp.propertyPath}");
+                            Logger.LogWarning(nameof(CopySourcePropertiesToTarget), $"-- Skipping {sourceProp.propertyType} at path {sourceProp.propertyPath}");
                             break;
 
                         case SerializedPropertyType.String:
                             enterChildren = false;
                             targetProp.stringValue = sourceProp.stringValue;
+                            Logger.Log(
+                                nameof(CopySourcePropertiesToTarget),
+                                $"-- {sourceProp.propertyPath} ({sourceProp.propertyType}): {targetProp.stringValue}");
                             break;
 
                         case SerializedPropertyType.ObjectReference:
                             enterChildren = false;
-                            var obj = ObjectReference.Get(sourceProp.objectReferenceValue);
-                            targetProp.objectReferenceValue = ObjectReference.GetMapped(obj, ObjectMappings).Object;
+                            targetProp.objectReferenceValue = ObjectMap.GetCorrespondingObject(sourceProp.objectReferenceValue);
+                            Logger.Log(
+                                nameof(CopySourcePropertiesToTarget),
+                                $"-- {sourceProp.propertyPath} ({sourceProp.propertyType}): {targetProp.objectReferenceValue}"
+                                );
                             break;
 
                         case SerializedPropertyType.ArraySize:
                             targetProp.intValue = sourceProp.intValue;
                             serializedTarget.ApplyModifiedPropertiesWithoutUndo();
+                            Logger.Log(
+                                nameof(CopySourcePropertiesToTarget),
+                                $"-- {sourceProp.propertyPath} ({sourceProp.propertyType}): {targetProp.intValue}"
+                                );
                             break;
 
                         default:
                             targetProp.boxedValue = sourceProp.boxedValue;
+                            Logger.Log(
+                                nameof(CopySourcePropertiesToTarget),
+                                $"-- {sourceProp.propertyPath} ({sourceProp.propertyType}): {targetProp.boxedValue}"
+                                );
                             break;
                     }
                 }
@@ -255,33 +255,46 @@ namespace Myna.Assets
             }
         }
 
-        private void ApplyPropertyOverrides()
+        private void ApplyPropertyOverrides(Object target)
         {
+            Assert.IsNotNull(target, "'target' is null");
+            Assert.IsTrue(EditorUtility.IsPersistent(target), "'target' is not a project asset");
+
+            string assetPath = AssetDatabase.GetAssetPath(target);
+            var targetObjects = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+
             foreach (var propertyOverride in PropertyOverrides)
             {
-                var target = ObjectReference.GetMapped(propertyOverride.Source, ObjectMappings).Object;
-                if (target == null)
+                var targetObject = ObjectMap.GetCorrespondingObject(propertyOverride.Source);
+                if (targetObject == null)
                 {
                     Logger.LogError(nameof(ApplyPropertyOverrides), "target == null for source " + propertyOverride.Source);
                     continue;
                 }
 
-                using var serializedObject = new SerializedObject(target);
+                if (!targetObjects.Any(x => x == targetObject))
+                {
+                    Logger.LogError(
+                        nameof(ApplyPropertyOverrides),
+                        $"targetObject '{targetObject}' not found at target asset path '{assetPath}'", targetObject);
+                    continue;
+                }
+
+                using var serializedObject = new SerializedObject(targetObject);
                 var property = serializedObject.FindProperty(propertyOverride.PropertyPath);
                 if (property == null)
                 {
                     Logger.LogError(
                         nameof(ApplyPropertyOverrides),
-                        $"property == null; target = {target}; propertyPath = {propertyOverride.PropertyPath}"
+                        $"property == null; targetObject = {targetObject}; propertyPath = {propertyOverride.PropertyPath}"
                         );
                     continue;
                 }
 
-                string json = propertyOverride.Value;
                 object value = property.propertyType switch
                 {
-                    SerializedPropertyType.ObjectReference => ObjectReference.GetMappedFromJson(json, ObjectMappings).Object,
-                    _ => JsonConvert.DeserializeObject(json)
+                    SerializedPropertyType.ObjectReference => ObjectMap.GetCorrespondingObject(propertyOverride.ObjectReference),
+                    _ => JsonConvert.DeserializeObject(propertyOverride.Value)
                 };
 
                 property.boxedValue = value;
@@ -291,14 +304,14 @@ namespace Myna.Assets
                 {
                     Logger.Log(
                         nameof(ApplyPropertyOverrides),
-                        $"Set value = {value} ({value.GetType()}); target = {target}; propertyPath = {propertyOverride.PropertyPath}"
+                        $"Set value = {value} ({value.GetType()}); targetObject = {targetObject}; propertyPath = {propertyOverride.PropertyPath}"
                         );
                 }
                 else
                 {
                     Logger.Log(
                         nameof(ApplyPropertyOverrides),
-                        $"Set value = null; target = {target}; propertyPath = {propertyOverride.PropertyPath}"
+                        $"Set value = null; targetObject = {targetObject}; propertyPath = {propertyOverride.PropertyPath}"
                         );
                 }
             }
@@ -309,21 +322,21 @@ namespace Myna.Assets
             Assert.IsNotNull(target, "'target' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(target), "'target' is not a project asset");
 
-            var keys = new List<ObjectReference>();
             string assetPath = AssetDatabase.GetAssetPath(target);
-            var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(x => !AssetDatabase.IsMainAsset(x) && x is not TimelineAssetVariantData);
-            foreach (var obj in objects)
+            var assets = AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                .Where(x => !AssetDatabase.IsMainAsset(x) && x is not TimelineAssetVariantData);
+            var added = new List<Object>(assets.Count());
+            foreach (var obj in assets)
             {
-                var key = ObjectReference.Get(obj);
-                var mapping = ObjectMappings.FirstOrDefault(x => x.Target == key);
-                if (mapping.Source.Object == null)
+                var mapping = ObjectMap.FirstOrDefault(x => x.Target == obj);
+                if (mapping.Source == null)
                 {
                     Logger.Log(nameof(FindAddedObjects), "Add " + obj);
-                    keys.Add(key);
+                    added.Add(obj);
                 }
             }
 
-            AddedObjects = keys;
+            AddedObjects = added;
         }
 
         private void FindRemovedObjects()
@@ -331,21 +344,21 @@ namespace Myna.Assets
             Assert.IsNotNull(Source, "'Source' is null");
             Assert.IsTrue(EditorUtility.IsPersistent(Source), "'Source' is not a project asset");
 
-            var keys = new List<ObjectReference>();
             string assetPath = AssetDatabase.GetAssetPath(Source);
-            var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath).Where(x => !AssetDatabase.IsMainAsset(x));
+            var objects = AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                .Where(x => !AssetDatabase.IsMainAsset(x) && x is not TimelineAssetVariantData);
+            var removed = new List<Object>(objects.Count());
             foreach (var obj in objects)
             {
-                var key = ObjectReference.Get(obj);
-                var mapping = ObjectMappings.FirstOrDefault(x => x.Source == key);
-                if (mapping.Target.Object == null)
+                var mapping = ObjectMap.FirstOrDefault(x => x.Source == obj);
+                if (mapping.Target == null)
                 {
                     Logger.Log(nameof(FindRemovedObjects), "Removed " + obj);
-                    keys.Add(key);
+                    removed.Add(obj);
                 }
             }
 
-            RemovedObjects = keys;
+            RemovedObjects = removed;
         }
 
         private void FindPropertyOverrides()
@@ -353,24 +366,15 @@ namespace Myna.Assets
             int count = 0;
             PropertyOverrides.Clear();
 
-            foreach (var mapping in ObjectMappings)
+            foreach (var mapping in ObjectMap)
             {
-                var source = mapping.Source.Object;
-                if (source == null)
+                if (mapping.Source == null || mapping.Target == null)
                 {
                     continue;
                 }
 
-                var target = mapping.Target.Object;
-                if (target == null)
-                {
-                    continue;
-                }
-
-                using var serializedSource = new SerializedObject(source);
-                using var serializedTarget = new SerializedObject(target);
-
-                Logger.Log(source);
+                using var serializedSource = new SerializedObject(mapping.Source);
+                using var serializedTarget = new SerializedObject(mapping.Target);
 
                 var iterator = serializedTarget.GetIterator();
                 iterator.Next(true);
@@ -404,25 +408,25 @@ namespace Myna.Assets
                             enterChildren = false;
                             if (sourceProp == null || targetProp.stringValue != sourceProp.stringValue)
                             {
-                                PropertyOverrides.Add(new(source, targetProp));
+                                PropertyOverrides.Add(new(mapping.Source, targetProp));
                             }
                             break;
 
                         case SerializedPropertyType.ObjectReference:
                             enterChildren = false;
-                            var targetObj = ObjectReference.Get(targetProp.objectReferenceValue);
-                            var correspondingObj = ObjectReference.GetMapped(targetObj, ObjectMappings);
-                            var sourceObj = sourceProp != null ? ObjectReference.Get(sourceProp.objectReferenceValue) : ObjectReference.Null;
+                            var targetObj = targetProp.objectReferenceValue;
+                            var correspondingObj = ObjectMap.GetCorrespondingObject(targetObj);
+                            var sourceObj = sourceProp?.objectReferenceValue;
                             if (sourceProp == null || correspondingObj != sourceObj)
                             {
-                                PropertyOverrides.Add(new(source, targetProp.propertyPath, correspondingObj));
+                                PropertyOverrides.Add(new(mapping.Source, targetProp.propertyPath, correspondingObj));
                             }
                             break;
 
                         default:
                             if (!targetProp.hasChildren && (sourceProp == null || !targetProp.boxedValue.Equals(sourceProp.boxedValue)))
                             {
-                                PropertyOverrides.Add(new(source, targetProp));
+                                PropertyOverrides.Add(new(mapping.Source, targetProp));
                             }
                             break;
                     }

@@ -1,4 +1,6 @@
+#if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,18 +9,40 @@ namespace Myna.Assets
     using Object = UnityEngine.Object;
 
     [Serializable]
-    public partial struct ObjectMapping { }
-
-#if UNITY_EDITOR
-    partial struct ObjectMapping
+    internal struct ObjectMapping
     {
-        public ObjectReference Source;
-        public ObjectReference Target;
+        public Object Source;
+        public Object Target;
 
         public ObjectMapping(Object source, Object target)
         {
-            Source = ObjectReference.Get(source);
-            Target = ObjectReference.Get(target);
+            Source = source;
+            Target = target;
+        }
+    }
+
+    internal static class ObjectMapExtensions
+    {
+        internal static Object GetCorrespondingObject(this List<ObjectMapping> map, Object obj)
+        {
+            if (obj != null)
+            {
+                foreach (var mapping in map)
+                {
+                    if (mapping.Source == obj)
+                    {
+                        return mapping.Target;
+                    }
+
+                    if (mapping.Target == obj)
+                    {
+                        return mapping.Source;
+                    }
+                }
+            }
+
+            return obj;
+
         }
     }
 
@@ -48,5 +72,5 @@ namespace Myna.Assets
             EditorGUI.PropertyField(rect, targetProp, GUIContent.none);
         }
     }
-#endif
 }
+#endif
