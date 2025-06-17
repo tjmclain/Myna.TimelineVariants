@@ -84,9 +84,9 @@ namespace Myna.Assets
         public void ApplyOverrides(Object target)
         {
             MapSourceToTargetObjects(target);
-            // RemoveInvalidTargetObjects(target);
-            // CopySourcePropertiesToTarget();
-            // ApplyPropertyOverrides(target);
+            RemoveInvalidTargetObjects(target);
+            CopySourcePropertiesToTarget();
+            ApplyPropertyOverrides(target);
         }
 
         public void RecordOverrides(Object target)
@@ -132,14 +132,11 @@ namespace Myna.Assets
                 mapping.Source = sourceObject;
 
                 var targetObject = mapping.Target;
-                if (!RemovedObjects.Contains(sourceObject))
+                if (targetObject == null && !RemovedObjects.Contains(sourceObject))
                 {
-                    if (targetObject == null)
-                    {
-                        targetObject = Instantiate(sourceObject);
-                        targetObject.hideFlags = sourceObject.hideFlags;
-                        AssetDatabase.AddObjectToAsset(targetObject, target);
-                    }
+                    targetObject = Instantiate(sourceObject);
+                    targetObject.hideFlags = sourceObject.hideFlags;
+                    AssetDatabase.AddObjectToAsset(targetObject, target);
                 }
                 mapping.Target = targetObject;
 
@@ -193,16 +190,20 @@ namespace Myna.Assets
                 bool enterChildren = true;
                 while (iterator.Next(enterChildren))
                 {
-                    enterChildren = true;
-
                     if (Array.Exists(SkippedPropertyNames, x => x == iterator.name))
                     {
                         enterChildren = false;
                         continue;
                     }
 
+                    enterChildren = CanEnterChildProperties(iterator);
+
                     var sourceProp = iterator.Copy();
                     var targetProp = serializedTarget.FindProperty(sourceProp.propertyPath);
+                    if (targetProp == null)
+                    {
+                        continue;
+                    }
 
                     switch (sourceProp.propertyType)
                     {
@@ -216,7 +217,6 @@ namespace Myna.Assets
                             break;
 
                         case SerializedPropertyType.String:
-                            enterChildren = false;
                             targetProp.stringValue = sourceProp.stringValue;
                             Logger.Log(
                                 nameof(CopySourcePropertiesToTarget),
@@ -224,7 +224,6 @@ namespace Myna.Assets
                             break;
 
                         case SerializedPropertyType.ObjectReference:
-                            enterChildren = false;
                             targetProp.objectReferenceValue = ObjectMap.GetCorrespondingObject(sourceProp.objectReferenceValue);
                             Logger.Log(
                                 nameof(CopySourcePropertiesToTarget),
@@ -382,13 +381,13 @@ namespace Myna.Assets
                 bool enterChildren = true;
                 while (iterator.Next(enterChildren))
                 {
-                    enterChildren = true;
-
                     if (Array.Exists(SkippedPropertyNames, x => x == iterator.name))
                     {
                         enterChildren = false;
                         continue;
                     }
+
+                    enterChildren = CanEnterChildProperties(iterator);
 
                     var targetProp = iterator.Copy();
                     var sourceProp = serializedSource.FindProperty(targetProp.propertyPath);
@@ -405,7 +404,6 @@ namespace Myna.Assets
                             break;
 
                         case SerializedPropertyType.String:
-                            enterChildren = false;
                             if (sourceProp == null || targetProp.stringValue != sourceProp.stringValue)
                             {
                                 PropertyOverrides.Add(new(mapping.Source, targetProp));
@@ -413,7 +411,6 @@ namespace Myna.Assets
                             break;
 
                         case SerializedPropertyType.ObjectReference:
-                            enterChildren = false;
                             var targetObj = targetProp.objectReferenceValue;
                             var correspondingObj = ObjectMap.GetCorrespondingObject(targetObj);
                             var sourceObj = sourceProp?.objectReferenceValue;
@@ -443,6 +440,16 @@ namespace Myna.Assets
 
                 serializedTarget.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        private static bool CanEnterChildProperties(SerializedProperty property)
+        {
+            return property.propertyType switch
+            {
+                SerializedPropertyType.String => false,
+                SerializedPropertyType.ObjectReference => false,
+                _ => true
+            };
         }
     }
 #endif
